@@ -78,6 +78,13 @@ class BlockSpaceManager:
         # Mapping: seq_id -> BlockTable.
         self.block_tables: Dict[int, BlockTable] = {}
 
+    def blocks_exceed(self, seq_group: SequenceGroup) -> bool:
+        # Required blocks exceed total Gpu blocks
+        seq = seq_group.get_seqs()[0]
+
+        num_required_blocks = len(seq.logical_token_blocks)
+        return num_required_blocks > self.num_total_gpu_blocks
+
     def can_allocate(self, seq_group: SequenceGroup) -> bool:
         # FIXME(woosuk): Here we assume that all sequences in the group share
         # the same prompt. This may not be true for preempted sequences.

@@ -136,6 +136,21 @@ class Scheduler:
                     self.waiting.pop(0)
                     break
 
+                # If the sequence group blocks exceed, stop.
+                if self.block_manager.blocks_exceed(seq_group):
+                    seq = seq_group.get_seqs()[0]
+                    num_required_blocks = len(seq.logical_token_blocks)
+
+                    logger.warning(
+                        f"{seq_group.request_id} Required blocks {num_required_blocks} "
+                        f"exceed total Gpu blocks {self.block_manager.num_total_gpu_blocks}")
+
+                    for seq in seq_group.get_seqs():
+                        seq.status = SequenceStatus.FINISHED_LENGTH_CAPPED
+                    ignored_seq_groups.append(seq_group)
+                    self.waiting.pop(0)
+                    break
+
                 # If the sequence group cannot be allocated, stop.
                 if not self.block_manager.can_allocate(seq_group):
                     break
